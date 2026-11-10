@@ -199,7 +199,8 @@ public class SchemaScreen extends Screen {
 		int start = page * FILES_PER_PAGE;
 		for (int i = 0; i < FILES_PER_PAGE && start + i < files.size(); i++) {
 			String name = files.get(start + i);
-			String shown = SchemaFiles.displayName(name) + (SchemaFiles.isLitematic(name) ? " [litematic]" : "");
+			String ext = SchemaFiles.importExtension(name);
+			String shown = SchemaFiles.displayName(name) + (ext != null ? " [" + ext.substring(1) + "]" : "");
 			boolean current = SchemaState.loaded != null && name.equals(loadedEntry);
 			addRenderableWidget(Button.builder(Component.literal(current ? "» " + shown + " «" : shown), b -> load(name))
 				.bounds(x, y + i * ROW, W, 20).build());

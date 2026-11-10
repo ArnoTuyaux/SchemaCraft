@@ -47,34 +47,55 @@ public final class SchemaFiles {
 		NbtIo.writeCompressed(schematic.toNbt(), fileFor(schematic.name()));
 	}
 
+	/** Extensions importées (formats d'autres mods / outils), en plus des .schema. */
+	private static final String[] IMPORT_EXTENSIONS = {
+		LitematicReader.EXTENSION, SchematicReader.SCHEM, SchematicReader.SCHEMATIC
+	};
+
+	/** Dossiers (relatifs au dossier du jeu) parcourus pour les fichiers importés. */
+	private static final String[] IMPORT_FOLDERS = {"schemas", "schematics", "config/worldedit/schematics"};
+
 	/**
-	 * Charge une entrée de {@link #list()} : soit le nom d'un .schema,
-	 * soit le chemin (relatif au dossier du jeu) d'un .litematic.
+	 * Charge une entrée de {@link #list()} : soit le nom d'un .schema, soit le chemin
+	 * (relatif au dossier du jeu) d'un .litematic, .schem ou .schematic.
 	 */
 	public static Schematic load(String entry) throws IOException {
-		if (isLitematic(entry)) {
+		String ext = importExtension(entry);
+		if (ext != null) {
 			Path file = Minecraft.getInstance().gameDirectory.toPath().resolve(entry);
-			return LitematicReader.read(file, displayName(entry));
+			if (ext.equals(LitematicReader.EXTENSION)) return LitematicReader.read(file, displayName(entry));
+			return SchematicReader.read(file, displayName(entry));
 		}
 		CompoundTag tag = NbtIo.readCompressed(fileFor(entry), NbtAccounter.unlimitedHeap());
 		return Schematic.fromNbt(tag, entry);
 	}
 
+	/** Extension d'un fichier importé (".litematic", ".schem", ".schematic"), ou null pour un .schema. */
+	public static String importExtension(String entry) {
+		String lower = entry.toLowerCase(java.util.Locale.ROOT);
+		for (String ext : IMPORT_EXTENSIONS) {
+			if (lower.endsWith(ext)) return ext;
+		}
+		return null;
+	}
+
 	public static boolean isLitematic(String entry) {
-		return entry.endsWith(LitematicReader.EXTENSION);
+		return LitematicReader.EXTENSION.equals(importExtension(entry));
 	}
 
 	/** Nom affiché : nom du fichier sans dossier ni extension. */
 	public static String displayName(String entry) {
-		if (!isLitematic(entry)) return entry;
+		String ext = importExtension(entry);
+		if (ext == null) return entry;
 		String f = entry.substring(entry.lastIndexOf('/') + 1);
-		return f.substring(0, f.length() - LitematicReader.EXTENSION.length());
+		return f.substring(0, f.length() - ext.length());
 	}
 
 	/**
 	 * Schémas disponibles, triés alphabétiquement :
-	 * les .schema de "schemas/" (par nom) puis les .litematic de "schemas/" et
-	 * "schematics/" (dossier de Litematica, sous-dossiers compris) par chemin relatif.
+	 * les .schema de "schemas/" (par nom) puis les .litematic, .schem et .schematic de "schemas/",
+	 * "schematics/" (dossier de Litematica) et "config/worldedit/schematics/" (WorldEdit),
+	 * sous-dossiers compris, par chemin relatif.
 	 */
 	public static List<String> list() {
 		List<String> names = new ArrayList<>();
@@ -88,19 +109,19 @@ public final class SchemaFiles {
 		}
 		names.sort(String.CASE_INSENSITIVE_ORDER);
 
-		List<String> litematics = new ArrayList<>();
+		List<String> imported = new ArrayList<>();
 		Path game = Minecraft.getInstance().gameDirectory.toPath();
-		for (String folder : new String[] {"schemas", "schematics"}) {
+		for (String folder : IMPORT_FOLDERS) {
 			Path dir = game.resolve(folder);
 			if (!Files.isDirectory(dir)) continue;
 			try (Stream<Path> files = Files.walk(dir, 4)) {
-				files.filter(p -> Files.isRegularFile(p) && p.getFileName().toString().endsWith(LitematicReader.EXTENSION))
-					.forEach(p -> litematics.add(game.relativize(p).toString().replace('\\', '/')));
+				files.filter(p -> Files.isRegularFile(p) && importExtension(p.getFileName().toString()) != null)
+					.forEach(p -> imported.add(game.relativize(p).toString().replace('\\', '/')));
 			} catch (IOException ignored) {
 			}
 		}
-		litematics.sort((a, b) -> String.CASE_INSENSITIVE_ORDER.compare(displayName(a), displayName(b)));
-		names.addAll(litematics);
+		imported.sort((a, b) -> String.CASE_INSENSITIVE_ORDER.compare(displayName(a), displayName(b)));
+		names.addAll(imported);
 		return names;
 	}
 }

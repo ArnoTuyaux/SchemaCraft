@@ -14,8 +14,9 @@ Mini-Litematica côté client : sélection, schémas, hologramme, affichage couc
    - CurseForge / Modrinth / Prism : clic droit sur l'instance → *Ouvrir le dossier* → `mods`.
 4. **Lancer le jeu** avec le profil Fabric 26.3. En jeu, appuyer sur `,` pour ouvrir le menu.
 
-Pour utiliser des `.litematic` : les mettre dans le dossier `schematics` (ou `schemas`) à côté du dossier `mods`.
-Pas besoin d'avoir Litematica installé.
+Pour utiliser des `.litematic`, `.schem` ou `.schematic` : les mettre dans le dossier `schematics` (ou `schemas`)
+à côté du dossier `mods`. Les schémas de WorldEdit (`config/worldedit/schematics`) sont aussi listés.
+Pas besoin d'avoir Litematica ni WorldEdit installé.
 
 ## Contrôles
 
@@ -35,9 +36,15 @@ Touches modifiables dans Options → Commandes → SchemaCraft.
 
 - **Sélection** : coordonnées des 2 coins, taille, sauvegarde sous un nom.
 - **Schémas** : liste des schémas, clic = charger :
-  `<instance>/schemas/*.schema`, et les `.litematic` de `schemas/` et `schematics/`
-  (dossier de Litematica, sous-dossiers compris). Pour un `.litematic`, toutes les régions sont
-  fusionnées ; le contenu des coffres et les entités sont ignorés.
+  `<instance>/schemas/*.schema`, et les `.litematic`, `.schem` et `.schematic` de `schemas/`, `schematics/`
+  (dossier de Litematica) et `config/worldedit/schematics/` (WorldEdit), sous-dossiers compris.
+  - `.litematic` : toutes les régions sont fusionnées.
+  - `.schem` / `.schematic` : format Sponge v1-v3 (WorldEdit 7+, FAWE...) et ancien format MCEdit
+    d'avant 1.13 (WorldEdit 6, MCEdit, Schematica), détecté automatiquement. Les ids numériques
+    des anciens fichiers sont convertis avec `assets/schemacraft/legacy_blocks.txt` ; les connexions
+    des barrières / vitres et la forme des escaliers peuvent apparaître en cadre rouge (non stockées
+    à l'époque), le printer pose quand même le bon bloc.
+  - Dans tous les cas, le contenu des coffres et les entités sont ignorés.
 - **Placement** : coin du schéma, déplacement X/Y/Z (shift = 10 blocs), rotation ±90°, miroir X/Z (comme Litematica), mode d'affichage, couches, retirer.
 - **Ressources** : objets nécessaires (total, à poser, dans l'inventaire), filtre « à chercher ».
 - **Paramètres** : printer (on/off, délai, blocs par pose, portée, couche affichée seulement).
